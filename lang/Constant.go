@@ -22,24 +22,33 @@ type Constant struct {
 	Name      string
 	Val       interface{}
 	Namespace interface{}
+	Len int
 }
 
-func (extension *Extension) RegisterConstant(name string, val interface{}, namespace interface{}) {
-	constant := &Constant{name, val, namespace}
+func (extension *Extension) RegisterConstant(constant *Constant) {
 	extension.constants = append(extension.constants, constant)
 }
 
 func (constant *Constant) register(moduleType int, moduleNumber int) {
 
-	switch reflect.ValueOf(constant.Val).Kind() {
-	case reflect.String:
-		zendRegisterStringConstant(moduleNumber, constant)
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32,
-		reflect.Uint64:
-			
-	case reflect.Bool:
-	case reflect.Float32, reflect.Float64:
+	if constant.Val == nil {
+		zendRegisterNullConstant(moduleNumber, constant)
+	} else {
+		switch reflect.ValueOf(constant.Val).Kind() {
+		case reflect.String:
+			zendRegisterStringConstant(moduleNumber, constant)
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32,
+			reflect.Uint64:
+			zendRegisterIntConstant(moduleNumber, constant)
+		case reflect.Bool:
+			zendRegisterBoolConstant(moduleNumber, constant)
+		case reflect.Float32, reflect.Float64:
+			zendRegisterFloatConstant(moduleNumber, constant)
+		default:
+			panic("not support constant type of " + reflect.TypeOf(constant.Val).Kind().String())
+		}
 	}
+
 }
 
 func registerConstants(moduleType int, moduleNumber int) {
@@ -51,5 +60,36 @@ func registerConstants(moduleType int, moduleNumber int) {
 func zendRegisterStringConstant(moduleNumber int, constant *Constant) {
 	cname := C.CString(strings.ToUpper(constant.Name))
 	val := constant.Val.(string)
-	C.zend_register_string_constant(cname, C.size_t(len(constant.Name)), C.CString(val), C.CONST_CS|C.CONST_PERSISTENT, C.int(moduleNumber));
+	if constant.Len == 0 {
+		C.zend_register_string_constant(cname, C.size_t(len(constant.Name)), C.CString(val), C.CONST_CS|C.CONST_PERSISTENT, C.int(moduleNumber));
+	} else {
+		C.zend_register_stringl_constant(cname, C.size_t(len(constant.Name)), C.CString(val), C.size_t(constant.Len), C.CONST_CS|C.CONST_PERSISTENT, C.int(moduleNumber));
+	}
+}
+
+
+func zendRegisterIntConstant(moduleNumber int, constant *Constant) {
+	cname := C.CString(strings.ToUpper(constant.Name))
+	val := C.zend_long(reflect.ValueOf(constant.Val).Convert(reflect.TypeOf(int64(1))).Interface().(int64))
+	C.zend_register_long_constant(cname, C.size_t(len(constant.Name)), val, C.CONST_CS|C.CONST_PERSISTENT, C.int(moduleNumber))
+}
+
+func zendRegisterBoolConstant(moduleNumber int, constant *Constant)  {
+	cname := C.CString(strings.ToUpper(constant.Name))
+	val := int8(0)
+	if constant.Val == true {
+		val = 1
+	}
+	C.zend_register_bool_constant(cname, C.size_t(len(constant.Name)), C.zend_bool(val), C.CONST_CS|C.CONST_PERSISTENT, C.int(moduleNumber))
+}
+
+func zendRegisterFloatConstant(moduleNumber int, constant *Constant) {
+	cname := C.CString(strings.ToUpper(constant.Name))
+	val := C.double(reflect.ValueOf(constant.Val).Convert(reflect.TypeOf(float64(1.0))).Interface().(float64))
+	C.zend_register_double_constant(cname, C.size_t(len(constant.Name)), val, C.CONST_CS|C.CONST_PERSISTENT, C.int(moduleNumber))
+}
+
+func zendRegisterNullConstant(moduleNumber int, constant *Constant) {
+	cname := C.CString(strings.ToUpper(constant.Name))
+	C.zend_register_null_constant(cname, C.size_t(len(constant.Name)), C.CONST_CS|C.CONST_PERSISTENT, C.int(moduleNumber))
 }
