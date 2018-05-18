@@ -11,3 +11,7 @@ echoLine("int constant:" . INTCONSTANT);
 echoLine("bool constant:" . var_export(BOOLCONSTANT, true));
 echoLine("float constant:" . FLOATCONSTANT);
 echoLine("null constant:" . var_export(NULLCONSTANT, true));
+
+
+echoLine("方法测试");
+helloWorld();

@@ -29,6 +29,13 @@ func get_module() unsafe.Pointer {
 	nullConstant := &lang.Constant{Name:"NULLCONSTANT"}
 	extension.RegisterConstant(nullConstant)
 
+	helloWorldFunction := &lang.Function{Name:"helloWorld", Handler:helloWorld}
+	extension.RegisterFunction(helloWorldFunction)
+
 	return extension.GetModule()
 }
 func main() {  }
+
+func helloWorld()  {
+	println("hello world! -- from helloWorld function");
+}

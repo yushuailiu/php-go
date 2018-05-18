@@ -22,5 +22,11 @@ all:
 test:
 	$(PHPEXE) -d extension=./demo.so demo/test.php
 
+
 clean:
 	rm -f demo.so
+
+
+info:
+	$(PHPEXE) -d extension=./demo.so demo/functions.php
+
