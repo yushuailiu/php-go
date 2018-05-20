@@ -14,4 +14,8 @@ echoLine("null constant:" . var_export(NULLCONSTANT, true));
 
 
 echoLine("方法测试");
-helloWorld();
+$ret = helloWorld("lfuture", 25, 1993, true);
+echoLine("");
+echoLine("helloworld return: " . $ret);
+
+echoLine(helloWorld2());

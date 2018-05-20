@@ -5,6 +5,7 @@ import "C"
 import (
 	"unsafe"
 	"../lang"
+	"fmt"
 )
 //export get_module
 func get_module() unsafe.Pointer {
@@ -32,10 +33,18 @@ func get_module() unsafe.Pointer {
 	helloWorldFunction := &lang.Function{Name:"helloWorld", Handler:helloWorld}
 	extension.RegisterFunction(helloWorldFunction)
 
+	helloWorld2Function := &lang.Function{Name:"helloWorld2", Handler:helloWorld2}
+	extension.RegisterFunction(helloWorld2Function)
+
 	return extension.GetModule()
 }
 func main() {  }
 
-func helloWorld()  {
-	println("hello world! -- from helloWorld function");
+func helloWorld(name string, age int, year int, flag bool) int {
+	fmt.Printf("hello %s! -- from helloWorld function", name);
+	return 25
+}
+
+func helloWorld2() string {
+	return "I am helloWorld2"
 }
